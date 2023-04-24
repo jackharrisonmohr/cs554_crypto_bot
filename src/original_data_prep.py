@@ -29,16 +29,22 @@ def prep_reddit_ndjson(input_file, output_file):
                     # Check if post ID is already in set to remove duplicates
                     if post['id'] not in post_ids:
 
-                        # Add post to set of IDs
-                        post_ids.add(post['id'])
+                        # Replace any newline characters in the title and selftext with spaces
+                        title = post['title'].replace('\n', ' ').replace('\r', ' ')
+                        selftext = post['selftext'].replace('\n', ' ').replace('\r', ' ')
 
-                        # Escape any double quotes that are already in the fields
-                        title = post['title'].replace('"', '""')
-                        selftext = post['selftext'].replace('"', '""')
+                        # Replace any double quotes in the title and selftext with two double quotes
+                        title = title.replace('"', '""')
+                        selftext = selftext.replace('"', '""')
 
-                        # Write relevant post data to CSV file
-                        # Enclose the title and selftext fields in quotes to handle commas and other special characters
-                        writer.writerow([post['permalink'], post['created_utc'], post['score'], post['author'], f'"{title}"', f'"{selftext}"'])
+                        # Enclose the title and selftext in double quotes if they contain commas
+                        if ',' in title:
+                            title = f'"{title}"'
+                        if ',' in selftext:
+                            selftext = f'"{selftext}"'
+
+                        # Write the post to the CSV file
+                        writer.writerow([post['permalink'], post['created_utc'], post['score'], post['author'], title, selftext])
                         
 
 # def write_csv(posts, output_file):
