@@ -34,49 +34,55 @@ Additional features to consider adding later:
 
 '''
 
-import json
-import csv
+
 input_file = '/home/ubuntu/myraidstorage/cryptobot_cs554_project/reddit/submissions/uncompressed_zsts/RS_2018-01'
 output_file = '/home/ubuntu/myraidstorage/cryptobot_cs554_project/reddit/submissions/relevant_posts/RS_2018-01_relevant_posts.csv'
-# Set of relevant keywords to filter posts
-keywords = {'bitcoin', 'crypto', 'cryptocurrency', 'btc', 'blockchain', 'ethereum', }
+import json
+import csv
+import re
 
-# Open input ndjson file
-with open(input_file, 'r') as f:
+# Set of relevant keywords to filter for
+keywords = {'crypto', 'cryptocurrency', 'bitcoin', 'btc', 'blockchain', 'eth', 'ethereum', 'ripple', 'xrp', 'altcoin', 'litecoin', 'LTC'}
 
-    # Open output CSV file for writing
-    with open(output_file, 'w', newline='', encoding='utf-8') as csv_file:
+# Function to clean and extract relevant information from a post
+def clean_post(post):
+    cleaned = {}
+    cleaned['permalink'] = 'https://www.reddit.com' + post['permalink']
+    cleaned['created_utc'] = post['created_utc']
+    cleaned['score'] = post['score']
+    cleaned['author'] = post['author']
+    cleaned['title'] = post['title']
+    cleaned['selftext'] = post['selftext']
+    return cleaned
 
-        # Create CSV writer object
-        writer = csv.writer(csv_file)
+# Function to write the cleaned posts to a CSV file
+def write_csv(posts, output_file):
+    with open(output_file, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.writer(file)
+        writer.writerow(['permalink', 'created_utc', 'score', 'author', 'title', 'selftext'])
 
-        # Create set to store post IDs to remove duplicates
-        post_ids = set()
+        for post in posts:
+            # Escape any double quotes that are already in the fields
+            title = post['title'].replace('"', '""')
+            selftext = post['selftext'].replace('"', '""')
 
-        # Iterate over each line (post) in the ndjson file
-        for line in f:
+            # Enclose the title and selftext fields in quotes to handle commas and other special characters
+            writer.writerow([post['permalink'], post['created_utc'], post['score'], post['author'], f'"{title}"', f'"{selftext}"'])
 
-            # Parse the line as JSON
-            post = json.loads(line)
+# Open the input file and filter for relevant posts
+with open(input_file, 'r', encoding='utf-8') as input_file:
+    posts = []
+    for line in input_file:
+        post = json.loads(line)
+        if any(keyword in post['title'].lower() or keyword in post['selftext'].lower() for keyword in keywords):
+            cleaned_post = clean_post(post)
+            posts.append(cleaned_post)
 
-            # Check if post title or body text contains any of the relevant keywords
-            if any(keyword in post['title'].lower() or keyword in post['selftext'].lower() for keyword in keywords):
+# Remove duplicates
+posts = [dict(t) for t in {tuple(d.items()) for d in posts}]
 
-                # Check if post ID is already in set to remove duplicates
-                if post['id'] not in post_ids:
+# Sort by created_utc
+posts = sorted(posts, key=lambda k: k['created_utc'])
 
-                    # Add post to set of IDs
-                    post_ids.add(post['id'])
-
-                    # Write relevant post data to CSV file
-                    writer.writerow([post['permalink'], post['created_utc'], post['score'], post['author'], post['title'], post['selftext']])
-
-# Open CSV file and sort by created_utc in ascending order
-with open('relevant_posts.csv', 'r', newline='', encoding='utf-8') as csv_file:
-    reader = csv.reader(csv_file)
-    sorted_posts = sorted(reader, key=lambda row: int(row[1]))
-
-# Write sorted data back to CSV file
-with open('relevant_posts.csv', 'w', newline='', encoding='utf-8') as csv_file:
-    writer = csv.writer(csv_file)
-    writer.writerows(sorted_posts)
+# Write to CSV file
+write_csv(posts, output_file)
