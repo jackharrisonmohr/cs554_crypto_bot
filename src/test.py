@@ -1,7 +1,6 @@
-import sys
 
-# Test calling with cli args
-print("arg 0: " + sys.argv[0])
-print("first arg: " + sys.argv[1])
-print("second arg: " + sys.argv[2])
-print("arg1 + arg2 = " + str(int(sys.argv[1]) + int(sys.argv[2])))
+from tensorflow.compiler.tf2tensorrt.wrap_py_utils import get_linked_tensorrt_version
+from tensorflow.compiler.tf2tensorrt.wrap_py_utils import get_loaded_tensorrt_version
+
+print(f"Linked TensorRT version {get_linked_tensorrt_version()}")
+print(f"Loaded TensorRT version {get_loaded_tensorrt_version()}")

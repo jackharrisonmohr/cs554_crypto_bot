@@ -1,6 +1,7 @@
 import json
 import csv
 import sys
+from tqdm import tqdm
 
 # Set of relevant keywords to filter posts
 keywords = {'bitcoin', 'crypto', 'cryptocurrency', 'btc', 'blockchain', 'ethereum', }
@@ -18,7 +19,7 @@ def prep_reddit_ndjson(input_file, output_file):
             post_ids = set()
 
             # Iterate over each line (post) in the ndjson file
-            for line in f:
+            for line in tqdm(f):
 
                 # Parse the line as JSON
                 post = json.loads(line)
