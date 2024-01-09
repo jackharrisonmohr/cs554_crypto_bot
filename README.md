@@ -1,2 +1,2 @@
-# cs554_crypto_bot
-bitcoin trading bot based on social media sentiment analysis
+
+Analyzes data from Reddit to feed a crypto trading bot which trades based on sentiment around blockchain-related posts.
